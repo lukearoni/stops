@@ -10,7 +10,21 @@ $$
 P(Y = 1) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_n X_n)}}
 $$
 
-Often times, a person's appearance unfortunately factors into how others treat them. Using data from the Stanford Open Policing Project, we use 400,000 traffic stops from New Orleans to find the difference in arrest rate between Black and White drivers adjusting for other variables. A potential weakness of our model is that the dataset is heavily modified from the actual study, and is reduced down to around 400,000 entries, therefore leaving out nearly 3.1 million entries. The deletion of the entries may have led to a misrepresentation of the population, and this would mess up our final predictions because it would be providing values that don't represent to the area, causing our entire model to be unrealistic.
+$$
+\widehat{\text{arrested}} = 0.177 
++ 0.0614 \cdot \text{sex}_{\text{Male}} 
+- 0.0445 \cdot \text{race}_{\text{White}} 
++ 0.0146 \cdot \text{zone}_{\text{B}} 
++ 0.00610 \cdot \text{zone}_{\text{C}} 
++ 0.0781 \cdot \text{zone}_{\text{D}} 
++ 0.00190 \cdot \text{zone}_{\text{E}} 
+- 0.00271 \cdot \text{zone}_{\text{F}} 
++ 0.0309 \cdot \text{zone}_{\text{G}} 
++ 0.0757 \cdot \text{zone}_{\text{H}} 
++ \text{(interaction terms for race and zone)}
+$$
+
+Often times, a person's appearance unfortunately factors into how others treat them. Using data from the Stanford Open Policing Project, we use 400,000 traffic stops from New Orleans to find the difference in arrest rate between Black and White drivers adjusting for other variables. A potential weakness of our model is that the dataset is heavily modified from the actual study, and is reduced down to around 400,000 entries, therefore leaving out nearly 3.1 million entries. The deletion of the entries may have led to a misrepresentation of the population, and this would mess up our final predictions because it would be providing values that don't represent to the area, causing our entire model to be unrealistic. We modeled the log odds of getting arrested at a traffic stop as a logistic function of sex and race.
 
 ```{r}
 #| message: false
@@ -18,4 +32,46 @@ library(tidyverse)
 library(primer.data)
 library(tidymodels)
 library(broom)
+library(gt)
+```
+
+```{r}
+#| cache: true
+x <- stops |>
+  filter(race %in% c("black", "white")) |>
+   mutate(race = str_to_title(race), 
+          sex = str_to_title(sex))
+ 
+fit_stops <- linear_reg() |>
+     set_engine("lm") |>
+     fit(arrested ~ sex + race, data = x)
+```
+
+```{r}
+tidy(fit_stops, conf.int = TRUE) |>
+  select(term, estimate, conf.low, conf.high) |>
+  mutate(
+    estimate = round(estimate, 3),
+    conf.low = round(conf.low, 3),
+    conf.high = round(conf.high, 3),
+    `95% CI` = paste0("[", conf.low, ", ", conf.high, "]")
+  ) |>
+  select(term, estimate, `95% CI`) |>
+  gt() |>
+  tab_header(
+    title = "Model Coefficients",
+    subtitle = "Estimates and 95% Confidence Intervals"
+  ) |>
+  cols_label(
+    term = "Term",
+    estimate = "Estimate"
+  ) |>
+  fmt_number(
+    columns = estimate,
+    decimals = 3
+  ) |>
+  tab_options(
+    table.font.size = "small",
+    column_labels.font.weight = "bold"
+  )
 ```
