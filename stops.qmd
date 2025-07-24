@@ -1,0 +1,15 @@
+---
+title: "Stops"
+format: html
+author: Luke Li
+execute: 
+  echo: false
+---
+
+Often times, a person's appearance unfortunately factors into how others treat them. Using data from the Stanford Open Policing Project, we use 400,000 traffic stops from New Orleans to find the difference in arrest rate between Black and White drivers adjusting for other variables.
+
+```{r}
+#| message: false
+library(tidyverse)
+library(primer.data)
+```
